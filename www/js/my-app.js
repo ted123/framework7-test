@@ -10,6 +10,7 @@ var myApp = new Framework7({
     precompileTemplates: true,
     // Enabled pages rendering using Template7
     template7Pages: true,
+    swipePanel:'left',
     // Specify Template7 data for pages
     template7Data: {
         // Will be applied for page with "projects.html" url
@@ -98,4 +99,11 @@ var $$ = Dom7;
 var mainView = myApp.addView('.view-main', {
     // Enable dynamic Navbar
     dynamicNavbar: true,
+});
+
+var mySearchbar = $$('.searchbar')[0].f7Searchbar;
+
+$$(document).on('submit', '.searchbar', function (e) { 
+  var formData = myApp.formToJSON('.searchbar');
+  myApp.alert( formData.q );
 });
