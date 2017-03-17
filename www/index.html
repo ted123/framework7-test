@@ -12,26 +12,35 @@
 		<link rel="stylesheet" href="lib/font-awesome-4.5.0/css/font-awesome.css">
 		<!-- Path to your custom app styles-->
 		<link rel="stylesheet" href="css/my-app.css">
+		<link rel="stylesheet" href="css/bootstrap-layout.css">
 	</head>
 	<body>
 		<!-- Status bar overlay for fullscreen mode-->
 		<div class="statusbar-overlay"></div>
 		<!-- Panels overlay-->
 		<div class="panel-overlay"></div>
-		<!-- Left panel with reveal effect-->
-		<div class="panel panel-left panel-reveal">
-			<div class="content-block">
-				<p>Left panel content goes here</p>
-			</div>
-		</div>
 		<!-- Right panel with cover effect-->
-		<div class="panel panel-right panel-cover">
+		<div class="panel panel-right panel-reveal">
 			<div class="content-block">
 				<p>Right panel content goes here</p>
 			</div>
 		</div>
+		<!-- Left panel with reveal effect-->
+		<div class="panel panel-left panel-reveal">
+			<div class="view view-left panel-view gdSideBar">
+				<div class="pages">
+					<!-- Index Page-->
+					<div data-page="left" class="page">
+						<div class="page-content">
+							Fetching data...
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 		<!-- Views-->
 		<div class="views">
+
 			<!-- Your main view, should have "view-main" class-->
 			<div class="view view-main">
 				<!-- Top Navbar-->
@@ -58,37 +67,18 @@
 					<!-- Index Page-->
 					<div data-page="index" class="page">
 						<div class="page-content">
-							<div class="content-block-title">Welcome To My Awesome App</div>
-							<div class="content-block">
-								<div class="content-block-inner">
-									<p>This app illustrates how you can use built-in template engine Template7 to render pages with required data.</p>
-								</div>
-							</div>
-							<div class="content-block-title">Side panels</div>
-							<div class="content-block">
-								<div class="row">
-									<div class="col-50"><a href="#" data-panel="left" class="button open-panel">Left Panel</a></div>
-									<div class="col-50"><a href="#" data-panel="right" class="button open-panel">Right Panel</a></div>
-								</div>
-							</div>
+							<!-- Page spinner -->
 						</div>
 					</div>
 				</div>
 				<!-- Bottom Toolbar-->
-				<div class="toolbar">
+				<!-- <div class="toolbar">
 					<div class="toolbar-inner"><a href="#" class="link">Link 1</a><a href="#" class="link">Link 2</a></div>
 				</div>
-			</div>
+ -->			</div>
 		</div>
 		<!-- Template7 templates-->
 		<script type="text/template7" id="about">
-			<div class="navbar">
-				<div class="navbar-inner">
-					<div class="left sliding"><a href="#" class="back link"> <i class="icon icon-back"></i><span>Back</span></a></div>
-					<div class="center sliding">About Me</div>
-					<div class="right"><a href="#" class="link icon-only open-panel"> <i class="icon icon-bars"></i></a></div>
-				</div>
-			</div>
 			<div class="pages">
 				<div data-page="about" class="page">
 					<div class="page-content">
@@ -102,8 +92,90 @@
 				</div>
 			</div>
 		</script>
+
+		<script type="text/template7" id="pageLoader">
+			<div class="pages">
+				<div data-page="about" class="page">
+					<div class="page-content">
+						<div class="gd-page-loader">
+							<span class="preloader preloader-red"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template7" id="homePage">
+			<div class="pages">
+				<div data-page="homePage" class="page">
+					<div class="page-content">
+						{{#each categories}}
+						<div class="content-block-title">
+							{{this.categoryname}}&nbsp;({{this.products.totalItems}})
+						</div>
+						<div class="content-block">
+							<div class="gdrow">
+								{{#each this.products.products}}
+								<div class="gd-product-card card">
+									<div class="product-image">
+										<img src="{{this.image}}" />
+									</div>
+									<div class="product-description">
+										{{this.name}}
+									</div>
+									<div class="product-price">
+										₱{{this.price}}
+									</div>
+									<div class="product-add-cart">
+										Add to Cart
+									</div>
+								</div>
+								{{/each}}
+							</div>
+						</div>
+						{{/each}}
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template7" id="sideBarTpl">
+			<div class="pages">
+				<div data-page="categories" class="page">
+					<div class="page-content bg-black color-white">
+						<div class="content-block-title">
+							Categories
+						</div>
+						<div class="list-block">
+							<ul>
+								{{#each categories}}
+								<li class="item-content bg-black color-white">
+									<div class="item-media">
+										{{#if this.image}}
+										<img class="gd-category-icon" src="{{this.image}}" />
+										{{else}}
+										<i class="fa fa-shopping-bag"></i>
+										{{/if}}
+									</div>
+									<div class="item-inner">
+										<div class="item-title">
+											{{this.categoryname}}
+										</div>
+										<div class="item-after">
+											<i class="fa fa-chevron-right"></i>
+										</div>
+									</div>
+								</li>
+								{{/each}}
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
 		<!-- Path to Framework7 Library JS-->
 		<script type="text/javascript" src="lib/framework7/js/framework7.min.js"></script>
+		<script type="text/javascript" src="lib/bluebird/bluebird.js"></script>
 		<!-- Path to your app js-->
 		<script type="text/javascript" src="js/my-app.js"></script>
 	</body>

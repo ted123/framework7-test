@@ -65,3 +65,62 @@ i.tabbar-demo-icon-4 {
   position: relative; /* All 'absolute'ly positioned elements are relative to this one */
   padding: 2px 9px; /* Add some padding so it looks nice */
 }
+
+.gd-page-loader {
+	display    : flex;
+	height     : 100%;
+	width      : 100%;
+	text-align : center;
+	justify-content: center; /* align horizontal */
+	align-items: center; /* align vertical */
+}
+
+.gd-page-loader > span {
+	width  : 50px;
+	height : 50px;
+}
+
+.gd-category-icon {
+	height : 18px;
+	width  : 17px;  
+}
+
+.gd-product-card {
+	height  : 205px;
+	margin  : 4px;
+	float   : left;
+	width   : 30%;
+	padding : 1px;     
+}
+
+.product-image {
+	width    : 100px;
+	height   : 100px;
+	position : relative; 
+}
+
+.product-image > img {
+	max-width  : 100%;
+	max-height : 100%;
+	position   : absolute;
+    top: 0; bottom:0; left: 0; right:0;
+    margin: auto;  
+}
+
+.product-description {
+	font-size : 12px;
+	margin    : 0 5px;
+	height    : 50px;
+	overflow  : scroll;
+}
+
+.product-price {
+	font-weight : bold;
+	margin      : 0 5px;
+}
+
+.product-add-cart {
+	border-top: 1px solid #d3d3d3;
+    text-align: center;
+    padding-top: 8px;
+}
