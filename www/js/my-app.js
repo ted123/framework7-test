@@ -12,14 +12,21 @@ var myApp = new Framework7( {
 	'precompileTemplates' : true
 } );
 
-var gd = {};
+var gd = {
+	'products' : {},
+	'onCart'   : {
+		'products' : {},
+		'total'    : 0
+	}
+};
 
 // Export selectors engine
 var $$ = Dom7;
 
 // Add Views
 var mainView = myApp.addView( '.view-main', {} );
-var left  = myApp.addView( '.view-left', {} );
+var left     = myApp.addView( '.view-left', {} );
+var right    = myApp.addView( '.panel-right', {} );
 
 // show page loader while fetching data
 mainView.router.load( {
@@ -41,6 +48,12 @@ function constructQuery ( query ) {
 		+ 'sort=' + encodeURIComponent( query.sort ) + '&'
 		+ 'offset=' + encodeURIComponent( query.offset || 0 ) + '&'
 		+ 'limit=' + encodeURIComponent( query.limit || 100 );
+}
+
+function objToArray ( obj ) {
+	return Object.keys( obj || {} ).map( function ( key ) { 
+		return obj[ key ]; 
+	} );
 }
 
 function getCategories ( callback ) {
@@ -65,6 +78,14 @@ function getProducts ( query ) {
 			'url'      : 'http://52.34.60.86:3000/products?' + constructQuery( query ),
 			
 			'success' : function searchSuccess( res ) {
+				gd.products = res.products.reduce( function ( acc, item ) {
+					if ( !acc[ item._id ] ) {
+						acc[ item._id ] = item;
+					}
+
+					return acc;
+				}, gd.products );
+
 				resolve( res );
 			},
 
@@ -126,6 +147,72 @@ function initView () {
 }
 
 initView();
+
+
+function addToCart ( id ) {
+	gd.products[ id ].quantity = 1;
+	gd.onCart.total += 1;
+	gd.onCart.products[ gd.products[ id ]._id ] = gd.products[ id ];
+
+	$$( '#' + id + '-atc' ).addClass( 'hidden' );
+	$$( '#' + id + '-control' ).removeClass( 'hidden' );
+	$$( '#' + id + '-product' ).addClass( 'gd-border-red' );
+
+	$$( document ).trigger( 'gd:updateCart' );
+}
+
+function increaseQuantity ( id ) {
+	gd.onCart.products[ id ].quantity += 1;
+
+	if ( gd.onCart.products[ id ].quantity > 100 ) {
+		gd.onCart.products[ id ].quantity -= 1;
+		myApp.alert( 'Unfortunately you can only order the same product up to 100' );
+	} else {
+		gd.onCart.total += 1;
+		$$( '#' + id + '-quantity' ).text( gd.onCart.products[ id ].quantity );
+	}
+
+	$$( document ).trigger( 'gd:updateCart' );
+}
+
+function decreaseQuantity ( id ) {
+	gd.onCart.products[ id ].quantity -= 1;
+	gd.onCart.total -= 1;
+
+	if ( !gd.onCart.products[ id ].quantity ) {
+		delete gd.onCart.products[ id ];
+		$$( '#' + id + '-atc' ).removeClass( 'hidden' );
+		$$( '#' + id + '-control' ).addClass( 'hidden' );
+		$$( '#' + id + '-product' ).removeClass( 'gd-border-red' );
+	} else {
+		$$( '#' + id + '-quantity' ).text( gd.onCart.products[ id ].quantity );
+	}
+
+	$$( document ).trigger( 'gd:updateCart' );
+}
+
+$$( document ).on( 'gd:updateCart', function () {
+	if ( gd.onCart.total ) {
+		$$( '.cart-total' ).removeClass( 'hidden' );
+		$$( '.cart-total' ).text( gd.onCart.total );
+	} else {
+		$$( '.cart-total' ).addClass( 'hidden' );
+	}
+} );
+
+$$( '.panel-right' ).on( 'panel:open', function () {
+	right.router.load( {
+		'template'     : myApp.templates.cartTpl,
+		'animatePages' : false,
+		'reload'       : true,
+		'context'      : {
+			'products' : objToArray( gd.onCart.products ).map( function ( product ) {
+				product.totalPrice = product.quantity * product.price;
+				return product;
+			} )
+		}
+	} );
+} );
 
 $$(document).on('submit', '.searchbar', function (e) { 
 	var formData = myApp.formToJSON('.searchbar');
