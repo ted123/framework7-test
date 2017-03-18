@@ -8,7 +8,7 @@ Template7.registerHelper( 'json_stringify', function ( context ) {
 var myApp = new Framework7( {
 	'animateNavBackIcon'  : true,
 	'template7Pages'      : true,
-	'swipePanel'          :'both',
+	'swipePanel'          :'right',
 	'precompileTemplates' : true
 } );
 
@@ -78,9 +78,11 @@ function getProducts ( query ) {
 			'url'      : 'http://52.34.60.86:3000/products?' + constructQuery( query ),
 			
 			'success' : function searchSuccess( res ) {
-				gd.products = res.products.reduce( function ( acc, item ) {
+				gd.products = res.products.reduce( function ( acc, item, i ) {
 					if ( !acc[ item._id ] ) {
 						acc[ item._id ] = item;
+					} else {
+						res.products[ i ] = acc[ item._id ];
 					}
 
 					return acc;
@@ -142,6 +144,88 @@ function loadSidebar ( categories ) {
 	loadGDHomepage();
 }
 
+function loadCart () {
+	var totalPrice = 0;
+	// show the product in the cart
+	right.router.load( {
+		'template'     : myApp.templates.cartTpl,
+		'animatePages' : false,
+		'reload'       : true,
+		'context'      : {
+			'products' : objToArray( gd.onCart.products ).map( function ( product ) {
+				product.totalPrice = product.count * product.price;
+				totalPrice += product.totalPrice;
+				return product;
+			} ),
+
+			'totalPrice' : totalPrice.toFixed( 2 )
+		}
+	} );
+}
+
+function loadCheckout () {
+	myApp.closePanel( true );
+
+	if ( myApp.getCurrentView().activePage.name !== 'checkout' ) {
+		mainView.router.load( {
+			'template' : myApp.templates.checkout,
+			'context'  : {
+				'subtotal' : gd.onCart.totalPrice,
+				'total'    : ( Number( gd.onCart.totalPrice ) + 50 ).toFixed( 2 )
+			}
+		} );
+	}
+}
+
+function loadCategoryProducts ( category ) {
+	var query = {
+		'where'  : 'category=' + category,
+		'sort'   : 'popularity',
+		'offset' : 0,
+		'limit'  : 50
+	};
+	
+	myApp.closePanel( true );
+	mainView.router.load( {
+		'template' : myApp.templates.pageLoader,
+		'reload'   : true
+	} );
+
+	getProducts( query )
+		.then( function ( products ) {
+			mainView.router.load( {
+				'template'     : myApp.templates.categoryProducts,
+				'reload'   : true,
+				'context' : {
+					'category' : category,
+					'products' : products
+				}
+			} );
+		} )
+		.catch( function ( err ) {
+			myApp.alert( err );
+		} );
+}
+
+function updateCart() {
+	if ( gd.onCart.total ) {
+		$$( '.cart-total' ).removeClass( 'hidden' );
+		$$( '.cart-total' ).text( gd.onCart.total );
+	} else {
+		$$( '.cart-total' ).addClass( 'hidden' );
+	}
+
+	gd.onCart.totalPrice = objToArray( gd.onCart.products ).reduce( function ( acc, item ) {
+		acc += item.count * item.price;
+		return acc;
+	}, 0 ).toFixed( 2 );
+
+	$$( '.cart-total-price' ).text( '₱' + gd.onCart.totalPrice );
+	$$( '.checkout-subtotal' ).text( '₱' + gd.onCart.totalPrice );
+	$$( '.checkout-total' ).text( '₱' + ( Number( gd.onCart.totalPrice ) + 50 ) );
+}
+
+
 function initView () {
 	getCategories( loadSidebar );
 }
@@ -150,68 +234,63 @@ initView();
 
 
 function addToCart ( id ) {
-	gd.products[ id ].quantity = 1;
+	console.log( id )
+	gd.products[ id ].count = 1;
 	gd.onCart.total += 1;
 	gd.onCart.products[ gd.products[ id ]._id ] = gd.products[ id ];
 
 	$$( '#' + id + '-atc' ).addClass( 'hidden' );
 	$$( '#' + id + '-control' ).removeClass( 'hidden' );
 	$$( '#' + id + '-product' ).addClass( 'gd-border-red' );
-
-	$$( document ).trigger( 'gd:updateCart' );
+	
+	loadCart();
+	updateCart();
 }
 
 function increaseQuantity ( id ) {
-	gd.onCart.products[ id ].quantity += 1;
+	var product = gd.onCart.products[ id ];
 
-	if ( gd.onCart.products[ id ].quantity > 100 ) {
-		gd.onCart.products[ id ].quantity -= 1;
+	gd.onCart.products[ id ].count += 1;
+
+	if ( product.count > 100 ) {
+		gd.onCart.products[ id ].count -= 1;
 		myApp.alert( 'Unfortunately you can only order the same product up to 100' );
 	} else {
+		var totalPrice = product.count * product.price;
 		gd.onCart.total += 1;
-		$$( '#' + id + '-quantity' ).text( gd.onCart.products[ id ].quantity );
+		$$( '#' + id + '-quantity' ).text( product.count );
+		$$( '#' + id + '-cart-quantity' ).text( product.count );
+		$$( '#' + id + '-total-price' ).text( '₱' + totalPrice.toFixed( 2 ) );
 	}
 
-	$$( document ).trigger( 'gd:updateCart' );
+	updateCart();
 }
 
 function decreaseQuantity ( id ) {
-	gd.onCart.products[ id ].quantity -= 1;
+	var product = gd.onCart.products[ id ];
+
+	gd.onCart.products[ id ].count -= 1;
 	gd.onCart.total -= 1;
 
-	if ( !gd.onCart.products[ id ].quantity ) {
+	if ( !product.count ) {
 		delete gd.onCart.products[ id ];
 		$$( '#' + id + '-atc' ).removeClass( 'hidden' );
 		$$( '#' + id + '-control' ).addClass( 'hidden' );
 		$$( '#' + id + '-product' ).removeClass( 'gd-border-red' );
+
+		loadCart();
 	} else {
-		$$( '#' + id + '-quantity' ).text( gd.onCart.products[ id ].quantity );
+		var totalPrice = product.count * product.price;
+		$$( '#' + id + '-quantity' ).text( product.count );
+		$$( '#' + id + '-cart-quantity' ).text( product.count );
+		$$( '#' + id + '-total-price' ).text( '₱' + totalPrice.toFixed( 2 ) );
 	}
 
-	$$( document ).trigger( 'gd:updateCart' );
+	updateCart();
 }
 
-$$( document ).on( 'gd:updateCart', function () {
-	if ( gd.onCart.total ) {
-		$$( '.cart-total' ).removeClass( 'hidden' );
-		$$( '.cart-total' ).text( gd.onCart.total );
-	} else {
-		$$( '.cart-total' ).addClass( 'hidden' );
-	}
-} );
-
 $$( '.panel-right' ).on( 'panel:open', function () {
-	right.router.load( {
-		'template'     : myApp.templates.cartTpl,
-		'animatePages' : false,
-		'reload'       : true,
-		'context'      : {
-			'products' : objToArray( gd.onCart.products ).map( function ( product ) {
-				product.totalPrice = product.quantity * product.price;
-				return product;
-			} )
-		}
-	} );
+	
 } );
 
 $$(document).on('submit', '.searchbar', function (e) { 

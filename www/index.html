@@ -24,9 +24,8 @@
 			<div class="view view-right panel-view">
 				<div class="pages">
 					<!-- Index Page-->
-					<div data-page="right" class="page">
+					<div data-page="right" class="page bg-white">
 						<div class="page-content">
-							Fetching data...
 						</div>
 					</div>
 				</div>
@@ -112,6 +111,149 @@
 			</div>
 		</script>
 
+		<script type="text/template7" id="categoryProducts">
+			<div class="pages">
+				<div data-page="categoryProducts" class="page">
+					<div class="page-content">
+						<div class="content-block-title">
+							{{category}} ( {{products.totalItems}} )
+						</div>
+						<div class="content-block">
+							<div class="gdrow">
+								{{#each products.products}}
+								<div id="{{this._id}}-product" class="gd-product-card card">
+									<div class="product-image">
+										<img src="{{this.image}}" />
+									</div>
+									<div class="product-description">
+										{{this.name}}
+									</div>
+									<div class="product-price">
+										₱{{this.price}}
+									</div>
+									{{#if this.count}}
+									<div id="{{this._id}}-atc" class="product-add-cart hidden" onClick="addToCart('{{this._id}}')">
+										Add to Cart
+									</div>
+									<div id="{{this._id}}-control" class="gd-bg-red color-white product-control">
+										<div class="gd-control-col width-28" onClick="decreaseQuantity('{{this._id}}')"> - </div>
+										<div id="{{this._id}}-quantity"  class="gd-control-col width-44 product-quantity"> {{this.count}} </div>
+										<div class="gd-control-col width-28" onClick="increaseQuantity('{{this._id}}')"> + </div>
+									</div>
+									{{else}}
+									<div id="{{this._id}}-atc" class="product-add-cart" onClick="addToCart('{{this._id}}')">
+										Add to Cart
+									</div>
+									<div id="{{this._id}}-control" class="gd-bg-red color-white product-control hidden">
+										<div class="gd-control-col width-28" onClick="decreaseQuantity('{{this._id}}')"> - </div>
+										<div id="{{this._id}}-quantity"  class="gd-control-col width-44 product-quantity"> 1 </div>
+										<div class="gd-control-col width-28" onClick="increaseQuantity('{{this._id}}')"> + </div>
+									</div>
+									{{/if}}
+								</div>
+								{{/each}}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template7" id="checkout">
+			<div class="pages">
+				<div data-page="checkout" class="page">
+					<div class="page-content">
+						<div class="content-block">
+							<div>
+								<table class="checkout-summary">
+									<tr>
+										<th colspan="2" class="gd-bg-red color-white">CHECKOUT SUMMARY</th>
+									</tr>
+									<tr>
+										<td>Sub-Total</td>
+										<td class="checkout-subtotal">₱{{subtotal}}</td>
+									</tr>
+									<tr>
+										<td>Delivery Fee Flat Rate</td>
+										<td>₱50.00</td>
+									</tr>
+									<tr>
+										<td>Total</td>
+										<td class="checkout-total">₱{{total}}</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+						<div class="content-block-title">
+							OTHER INFORMATION
+						</div>
+						<div class="list-block inset">
+							<ul>
+								<li>
+									<div class="item-content">
+										<div class="item-inner">
+											<div class="item-input">
+												<textarea placeholder="Please place here the address where to deliver the products. The more details the better."></textarea>
+											</div>
+										</div>
+									</div>
+								</li>
+								<li>
+									<div class="item-content">
+										<div class="item-inner">
+											<div class="item-input">
+												<select>
+													<option value="" disabled selected hidden>Preferred time of delivery</option>
+													<option value="10:00am">10:00am</option>
+													<option value="10:30am">10:30am</option>
+													<option value="11:00am">11:00am</option>
+													<option value="11:30am">11:30am</option>
+													<option value="12:00am">12:00pm</option>
+													<option value="12:30am">12:30pm</option>
+													<option value="1:00pm">1:00pm</option>
+													<option value="1:30pm">1:30pm</option>
+													<option value="2:00pm">2:00pm</option>
+													<option value="2:30pm">2:30pm</option>
+													<option value="3:00pm">3:00pm</option>
+													<option value="3:30pm">3:30pm</option>
+													<option value="4:00pm">4:00pm</option>
+													<option value="4:30pm">4:30pm</option>
+													<option value="5:00pm">5:00pm</option>
+													<option value="5:30pm">5:30pm</option>
+													<option value="6:00pm">6:00pm</option>
+													<option value="6:30pm">6:30pm</option>
+													<option value="7:00pm">7:00pm</option>
+													<option value="7:30pm">7:30pm</option>
+												</select>
+											</div>
+										</div>
+									</div>
+								</li>
+								<li>
+									<div class="item-content">
+										<div class="item-inner">
+											<div class="item-input">
+												Grocery will be delivered tomorrow.
+											</div>
+										</div>
+									</div>
+								</li>
+								<li>
+									<div class="item-content">
+										<div class="item-inner">
+											<div class="item-input">
+												Note: Your grocery might be delivered earlier than the preferred time of delivery but you will still be notified by the delivery personnel via text or call.
+											</div>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+
 		<script type="text/template7" id="homePage">
 			<div class="pages">
 				<div data-page="homePage" class="page">
@@ -169,7 +311,7 @@
 										<i class="fa fa-shopping-bag"></i>
 										{{/if}}
 									</div>
-									<div class="item-inner">
+									<div class="item-inner" onClick="loadCategoryProducts('{{this.categoryname}}')">
 										<div class="item-title">
 											{{this.categoryname}}
 										</div>
@@ -188,21 +330,21 @@
 
 		<script type="text/template7" id="cartTpl">
 			<div class="pages">
-				<div data-page="categories" class="page">
+				<div data-page="cart" class="page bg-white">
 					<div class="page-content">
-						<div>
+						<div class="gd-cart">
 							<ul class="gd-cart-list">
 								{{#each products}}
 								<li>
 									<div class="cart-content bg-white">
 										<div class="pull-left cart-product-quantity">
-											<div class="cart-product-chevron">
+											<div class="cart-product-chevron" onClick="increaseQuantity('{{this._id}}')">
 												<i class="fa fa-chevron-up"></i>
 											</div>
-											<div class="cart-product-quantity-text">
-												{{this.quantity}}
+											<div id="{{this._id}}-cart-quantity" class=" cart-product-quantity-text">
+												{{this.count}}
 											</div>
-											<div class="cart-product-chevron">
+											<div class="cart-product-chevron" onClick="decreaseQuantity('{{this._id}}')">
 												<i class="fa fa-chevron-down"></i>
 											</div>
 										</div>
@@ -215,7 +357,7 @@
 											<div class="cart-product-price">
 												₱{{this.price}}
 											</div>
-											<div class="cart-product-total-price">
+											<div id="{{this._id}}-total-price" class="cart-product-total-price">
 												₱{{this.totalPrice}}
 											</div>
 										</div>
@@ -223,6 +365,12 @@
 								</li>
 								{{/each}}
 							</ul>
+						</div>
+						<div class="toolbar gd-toolbar-fixed gd-bg-red color-white">
+							<div class="toolbar-inner" onClick="loadCheckout()">
+								<div class="pull-left">checkout</div>
+								<div class="cart-total-price pull-right">₱{{totalPrice}}</div>
+							</div>
 						</div>
 					</div>
 				</div>

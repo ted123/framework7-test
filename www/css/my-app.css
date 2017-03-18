@@ -87,7 +87,7 @@ i.tabbar-demo-icon-4 {
 
 .gd-product-card {
 	height  : 205px;
-	margin  : 4px;
+	margin  : 3px;
 	float   : left;
 	width   : 30%;
 	border  : 1px  solid white;   
@@ -208,4 +208,29 @@ i.tabbar-demo-icon-4 {
 
 .pull-left {
 	float : left !important; 
+}
+
+.pull-right {
+	float : right !important;
+}
+
+.gd-cart {
+	padding-bottom : 45px;
+	overflow       : auto;  
+}
+
+.gd-toolbar-fixed {
+	position : fixed; 
+}
+
+.checkout-summary {
+	width : 100%;
+}
+
+.checkout-summary td {
+	background-color : white; 
+}
+
+.checkout-total {
+	font-weight : bold; 
 }
