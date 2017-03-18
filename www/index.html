@@ -114,14 +114,18 @@
 		<script type="text/template7" id="categoryProducts">
 			<div class="pages">
 				<div data-page="categoryProducts" class="page">
-					<div class="page-content">
+					<div class="page-content infinite-scroll" data-distance="10">
 						<div class="content-block-title">
 							{{category}} ( {{products.totalItems}} )
 						</div>
 						<div class="content-block">
 							<div class="gdrow">
 								{{#each products.products}}
+								{{#if this.count}}
+								<div id="{{this._id}}-product" class="gd-product-card gd-border-red card">
+								{{else}}
 								<div id="{{this._id}}-product" class="gd-product-card card">
+								{{/if}}
 									<div class="product-image">
 										<img src="{{this.image}}" />
 									</div>
@@ -153,6 +157,9 @@
 								</div>
 								{{/each}}
 							</div>
+						</div>
+						<div class="infinite-scroll-preloader hidden">
+							<div class="preloader"></div>
 						</div>
 					</div>
 				</div>
@@ -311,7 +318,7 @@
 										<i class="fa fa-shopping-bag"></i>
 										{{/if}}
 									</div>
-									<div class="item-inner" onClick="loadCategoryProducts('{{this.categoryname}}')">
+									<div class="item-inner" onClick="loadProducts('{{this.categoryname}}', 'category')">
 										<div class="item-title">
 											{{this.categoryname}}
 										</div>
@@ -358,7 +365,7 @@
 												₱{{this.price}}
 											</div>
 											<div id="{{this._id}}-total-price" class="cart-product-total-price">
-												₱{{this.totalPrice}}
+												₱{{this.totalPriceText}}
 											</div>
 										</div>
 									</div>

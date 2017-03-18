@@ -17,9 +17,53 @@ var gd = {
 	'onCart'   : {
 		'products' : {},
 		'total'    : 0
-	}
+	},
+	'limit'  : 0,
+	'offset' : 0,
+	'query'  : {}
 };
 
+var itemTpl         = '{{#each products.products}} {{#if this.count}} <div id="{{this._id}}-product" class="gd-product-card gd-border-red card"> {{else}} <div id="{{this._id}}-product" class="gd-product-card card"> {{/if}} <div class="product-image"> <img src="{{this.image}}" /> </div> <div class="product-description"> {{this.name}} </div> <div class="product-price"> ₱{{this.price}} </div> {{#if this.count}} <div id="{{this._id}}-atc" class="product-add-cart hidden" onClick="addToCart(\'{{this._id}}\')"> Add to Cart </div> <div id="{{this._id}}-control" class="gd-bg-red color-white product-control"> <div class="gd-control-col width-28" onClick="decreaseQuantity(\'{{this._id}}\')"> - </div> <div id="{{this._id}}-quantity" class="gd-control-col width-44 product-quantity"> {{this.count}} </div> <div class="gd-control-col width-28" onClick="increaseQuantity(\'{{this._id}}\')"> + </div> </div> {{else}} <div id="{{this._id}}-atc" class="product-add-cart" onClick="addToCart(\'{{this._id}}\')"> Add to Cart </div> <div id="{{this._id}}-control" class="gd-bg-red color-white product-control hidden"> <div class="gd-control-col width-28" onClick="decreaseQuantity(\'{{this._id}}\')"> - </div> <div id="{{this._id}}-quantity" class="gd-control-col width-44 product-quantity"> 1 </div> <div class="gd-control-col width-28" onClick="increaseQuantity(\'{{this._id}}\')"> + </div> </div> {{/if}} </div> {{/each}}'
+var compiledItemTpl = Template7.compile( itemTpl );
+
+myApp.onPageInit( 'categoryProducts', function ( page ) {
+	if ( $$( '.gdrow > .card' ).length === gd.currentTotal ) {
+		return;
+	}
+
+	var loading;
+
+	$$( '.infinite-scroll' ).on( 'infinite', function () {
+		if ( loading ) {
+			return;
+		} 
+		loading = true;
+		gd.query.offset += gd.query.limit;
+		
+		$$( '.infinite-scroll-preloader' ).removeClass( 'hidden' );
+		
+		getProducts( gd.query )
+			.then( function ( products ) {
+				var html = compiledItemTpl( { 'products' : products } )
+				loading  = false;
+
+				$$( '.gdrow' ).append( html );
+
+				if ( $$( '.gdrow > .card' ).length === products.totalItems ) {
+					myApp.detachInfiniteScroll( '.infinite-scroll' );
+					$$( '.infinite-scroll-preloader' ).addClass( 'hidden' );
+				}
+			} )
+			.catch( function ( err ) {
+				gd.query.offset -= gd.query.limit;
+				loading = false;
+			} );
+	} );
+} );
+
+myApp.onPageBeforeRemove( 'categoryProducts', function ( ) {
+	myApp.detachInfiniteScroll( '.infinite-scroll' );
+} );
 // Export selectors engine
 var $$ = Dom7;
 
@@ -44,10 +88,15 @@ function sort ( array, key ) {
 }
 
 function constructQuery ( query ) {
-	return 'where=' + encodeURIComponent( query.where ) + '&'
+	var str = {
+		'category' : 'where=' + encodeURIComponent( query.where ) + '&'
 		+ 'sort=' + encodeURIComponent( query.sort ) + '&'
 		+ 'offset=' + encodeURIComponent( query.offset || 0 ) + '&'
-		+ 'limit=' + encodeURIComponent( query.limit || 100 );
+		+ 'limit=' + encodeURIComponent( query.limit || 100 ),
+		'name' : 'offset=' + encodeURIComponent( query.offset || 0 ) + '&'
+		+ 'limit=' + encodeURIComponent( query.limit || 100 )
+	}
+	return str[ query.key ];
 }
 
 function objToArray ( obj ) {
@@ -72,10 +121,15 @@ function getCategories ( callback ) {
 }
 
 function getProducts ( query ) {
+	var url = {
+		'category' : 'http://52.34.60.86:3000/products?' + constructQuery( query ),
+		'name'     : 'http://52.34.60.86:3000/products/' + query.value + '?' + constructQuery( query )
+	};
+	console.log( url[ query.key ] )
 	return new Promise( function ( resolve, reject ) {
 		$$.ajax( {
 			'dataType' : 'json',
-			'url'      : 'http://52.34.60.86:3000/products?' + constructQuery( query ),
+			'url'      : url[ query.key ],
 			
 			'success' : function searchSuccess( res ) {
 				gd.products = res.products.reduce( function ( acc, item, i ) {
@@ -101,6 +155,8 @@ function getProducts ( query ) {
 function loadGDHomepage () {
 	var homeData = gd.categories.map( function ( category ) {
 		var query = {
+			'value'  : category.categoryname,
+			'key'    : 'category',
 			'where'  : 'category=' + category.categoryname,
 			'sort'   : 'popularity',
 			'offset' : 0,
@@ -154,6 +210,7 @@ function loadCart () {
 		'context'      : {
 			'products' : objToArray( gd.onCart.products ).map( function ( product ) {
 				product.totalPrice = product.count * product.price;
+				product.totalPriceText = product.totalPrice.toFixed( 2 );
 				totalPrice += product.totalPrice;
 				return product;
 			} ),
@@ -172,17 +229,22 @@ function loadCheckout () {
 			'context'  : {
 				'subtotal' : gd.onCart.totalPrice,
 				'total'    : ( Number( gd.onCart.totalPrice ) + 50 ).toFixed( 2 )
-			}
+			},
+
+			'reload' : true
 		} );
 	}
 }
 
-function loadCategoryProducts ( category ) {
+function loadProducts ( value, key ) {
+	
 	var query = {
-		'where'  : 'category=' + category,
+		'key'    : key,
+		'value'  : value,
+		'where'  : key + '=' + value,
 		'sort'   : 'popularity',
 		'offset' : 0,
-		'limit'  : 50
+		'limit'  : 10
 	};
 	
 	myApp.closePanel( true );
@@ -193,11 +255,13 @@ function loadCategoryProducts ( category ) {
 
 	getProducts( query )
 		.then( function ( products ) {
+			gd.query = query;
+			gd.currentTotal = products.totalItems;
 			mainView.router.load( {
 				'template'     : myApp.templates.categoryProducts,
 				'reload'   : true,
 				'context' : {
-					'category' : category,
+					'category' : value,
 					'products' : products
 				}
 			} );
@@ -289,12 +353,8 @@ function decreaseQuantity ( id ) {
 	updateCart();
 }
 
-$$( '.panel-right' ).on( 'panel:open', function () {
-	
-} );
-
 $$(document).on('submit', '.searchbar', function (e) { 
 	var formData = myApp.formToJSON('.searchbar');
-	myApp.alert( formData.q );
+	loadProducts( formData.q, 'name' );
 });
 
