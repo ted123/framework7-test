@@ -70,7 +70,6 @@ i.tabbar-demo-icon-4 {
 	display    : flex;
 	height     : 100%;
 	width      : 100%;
-	text-align : center;
 	justify-content: center; /* align horizontal */
 	align-items: center; /* align vertical */
 }
@@ -195,8 +194,9 @@ i.tabbar-demo-icon-4 {
 .cart-inner {
 	position: relative;
     height: 100px;
-    width: 170px;
-    margin-left : 5px;
+    width: auto;
+    overflow: hidden;
+    padding-left : 5px;
 }
 
 .cart-product-total-price {
@@ -243,4 +243,40 @@ i.tabbar-demo-icon-4 {
 .infinite-scroll-preloader .preloader {
   width:34px;
   height:34px;
-}    
+}
+
+.login-screen-title {
+	margin-top : 45px; 
+}
+
+.login-logo {
+	padding-left : 25px; 
+}
+
+.login-logo > img {
+	width : 150px;
+}
+
+.accordion-item-content {
+	margin : 0 15px;
+}
+
+.width-100 {
+	width : 100%;
+}
+
+.absolute {
+	position : absolute !important;
+}
+
+.width-100-px {
+	width: 100px !important;
+}
+.text-center {
+	text-align : center; 
+}
+
+#popup-loader-page .content-block-title {
+	padding : 10px;
+	margin : 0;
+}

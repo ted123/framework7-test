@@ -4,12 +4,33 @@ Template7.registerHelper( 'json_stringify', function ( context ) {
 	return JSON.stringify( context );
 });
 
+Template7.registerHelper( 'formatCalendarDate', function ( context ) {
+	return moment( new Date( context ) ).calendar();
+});
+
+Template7.registerHelper( 'formatDate', function ( context, options ) {
+	return moment( new Date( context ) ).format( options.hash.format );
+});
+
 // Initialize your app
 var myApp = new Framework7( {
 	'animateNavBackIcon'  : true,
 	'template7Pages'      : true,
 	'swipePanel'          :'right',
-	'precompileTemplates' : true
+	'precompileTemplates' : true,
+
+	'preroute' : function ( view, page ) {
+		if ( ( page.query || {} ).checkout && !gd.token ) {
+			loadLogIn();
+			gd.toCheckout = true;
+			return false;
+		} else if ( gd.toCheckout && gd.token ) {
+			gd.toCheckout = false;
+			loadCheckout();
+		} else {
+			gd.toCheckout = false;
+		}
+	} 
 } );
 
 var gd = {
@@ -18,10 +39,25 @@ var gd = {
 		'products' : {},
 		'total'    : 0
 	},
+	'transactions' : {},
 	'limit'  : 0,
 	'offset' : 0,
 	'query'  : {}
 };
+
+function initGD () {
+	gd = {
+		'products' : {},
+		'onCart'   : {
+			'products' : {},
+			'total'    : 0
+		},
+		'transactions' : {},
+		'limit'  : 0,
+		'offset' : 0,
+		'query'  : {}
+	};
+}
 
 var itemTpl         = '{{#each products.products}} {{#if this.count}} <div id="{{this._id}}-product" class="gd-product-card gd-border-red card"> {{else}} <div id="{{this._id}}-product" class="gd-product-card card"> {{/if}} <div class="product-image"> <img src="{{this.image}}" /> </div> <div class="product-description"> {{this.name}} </div> <div class="product-price"> ₱{{this.price}} </div> {{#if this.count}} <div id="{{this._id}}-atc" class="product-add-cart hidden" onClick="addToCart(\'{{this._id}}\')"> Add to Cart </div> <div id="{{this._id}}-control" class="gd-bg-red color-white product-control"> <div class="gd-control-col width-28" onClick="decreaseQuantity(\'{{this._id}}\')"> - </div> <div id="{{this._id}}-quantity" class="gd-control-col width-44 product-quantity"> {{this.count}} </div> <div class="gd-control-col width-28" onClick="increaseQuantity(\'{{this._id}}\')"> + </div> </div> {{else}} <div id="{{this._id}}-atc" class="product-add-cart" onClick="addToCart(\'{{this._id}}\')"> Add to Cart </div> <div id="{{this._id}}-control" class="gd-bg-red color-white product-control hidden"> <div class="gd-control-col width-28" onClick="decreaseQuantity(\'{{this._id}}\')"> - </div> <div id="{{this._id}}-quantity" class="gd-control-col width-44 product-quantity"> 1 </div> <div class="gd-control-col width-28" onClick="increaseQuantity(\'{{this._id}}\')"> + </div> </div> {{/if}} </div> {{/each}}'
 var compiledItemTpl = Template7.compile( itemTpl );
@@ -73,11 +109,13 @@ var left     = myApp.addView( '.view-left', {} );
 var right    = myApp.addView( '.panel-right', {} );
 
 // show page loader while fetching data
-mainView.router.load( {
-	'template'     : myApp.templates.pageLoader,
-	'animatePages' : false,
-	'reload'        : true
-} );
+function showLoadingPage () {
+	mainView.router.load( {
+		'template'     : myApp.templates.pageLoader,
+		'animatePages' : false,
+		'reload'        : true
+	} );
+}
 
 function sort ( array, key ) {
 	return ( array || [] ).sort( function( a, b ) {
@@ -96,13 +134,20 @@ function constructQuery ( query ) {
 		'name' : 'offset=' + encodeURIComponent( query.offset || 0 ) + '&'
 		+ 'limit=' + encodeURIComponent( query.limit || 100 )
 	}
-	return str[ query.key ];
+	return str[ query.key || 'category' ];
 }
 
 function objToArray ( obj ) {
 	return Object.keys( obj || {} ).map( function ( key ) { 
 		return obj[ key ]; 
 	} );
+}
+
+function jsonToFormData ( jsonData ) {
+	return Object.keys( jsonData ).reduce( function ( formData, key ) {
+		formData.append( key, jsonData[ key ] );
+		return formData;
+	}, new FormData() );
 }
 
 function getCategories ( callback ) {
@@ -125,7 +170,7 @@ function getProducts ( query ) {
 		'category' : 'http://52.34.60.86:3000/products?' + constructQuery( query ),
 		'name'     : 'http://52.34.60.86:3000/products/' + query.value + '?' + constructQuery( query )
 	};
-	console.log( url[ query.key ] )
+
 	return new Promise( function ( resolve, reject ) {
 		$$.ajax( {
 			'dataType' : 'json',
@@ -230,10 +275,50 @@ function loadCheckout () {
 				'subtotal' : gd.onCart.totalPrice,
 				'total'    : ( Number( gd.onCart.totalPrice ) + 50 ).toFixed( 2 )
 			},
-
+			'query' : {
+				'checkout' : true
+			},
 			'reload' : true
 		} );
 	}
+}
+
+function loadTransactions () {
+	myApp.closePanel( true );
+
+	var query = {
+		'where' : 'userid=' + gd.user.id,
+		'limit' : 5000,
+		'sort'  : '-checkoutdate'
+	};
+
+	showLoadingPage();
+
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://52.34.60.86:3000/checkout?' + constructQuery( query ),
+
+		'success' : function searchSuccess( res ) {
+			gd.transactions = res.checkout.reduce( function ( acc, item, i ) {
+				acc[ item._id ] = item;
+				return acc;
+			}, {} );
+
+			mainView.router.load( {
+				'template' : myApp.templates.transactions,
+				'context'  : {
+					'total'        : res.totalItems || 0,
+					'transactions' : res.checkout || []
+				},
+
+				'reload' : true
+			} );
+		},
+
+		error : function searchError( xhr, err ) {
+			myApp.alert( 'An error occured. Try re-clicking transactions in the left navigation.' )
+		}
+	} );
 }
 
 function loadProducts ( value, key ) {
@@ -271,6 +356,119 @@ function loadProducts ( value, key ) {
 		} );
 }
 
+function loadOrderList ( id ) {
+	var transaction = gd.transactions[ id ];
+	var products    = [];
+
+	myApp.popup( '.popup-loader' );
+
+	var query = {
+		'where' : '_id=' + transaction.items.toString(),
+		'limit' : 5000
+	};
+
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://52.34.60.86:3000/products?' + constructQuery( query ),
+		'method'   : 'GET',
+
+		'success' : function ( res ) {
+			products = res.products.map( function ( item, index ) {
+				item.count = transaction.quantity[ index ];
+				item.price = transaction.itemprice[ index ];
+				item.totalPriceText = ( item.count * item.price ).toFixed( 2 );
+
+				return item;
+			} );
+
+			var html = myApp.templates.orderList( {
+				'title'    : gd.transactions[ id ].checkoutdate,
+				'products' : products
+			} );
+
+			$$( '#popup-loader-page' ).html( html );
+		},
+
+		'error' : function () {
+			$$( '#popup-loader-text' ).removeClass();
+			$$( '#popup-loader-text' ).text( 'An error occured. Try clicking the view order list button again.' );
+		}
+	} );
+}
+
+function signOut () {
+	myApp.closePanel( true );
+	var data = jsonToFormData( { 'token' : gd.token } );
+
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://grocerydistrict.ph/api/user/logout',
+		'data'     : data,
+		'method'   : 'POST'
+	} );
+
+	left.router.load( {
+		'template'     : myApp.templates.sideBarTpl,
+		'animatePages' : false,
+		'reload'       : true,
+		'context'      : {
+			'categories' : gd.categories
+		}
+	} );
+
+	gd.token = null;
+	gd.user  = null;
+
+	showLoadingPage();
+	loadGDHomepage();
+}
+
+function signIn () {
+	var data = jsonToFormData( myApp.formToJSON( '#sign-in-form' ) );
+
+	$$( '#gd-sign-in-loader' ).removeClass( 'hidden' );
+	$$( '#gd-sign-in-options' ).addClass( 'hidden' );
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://grocerydistrict.ph/api/login',
+		'data'     : data,
+		'method'   : 'POST',
+		'success' : function searchSuccess( res ) {
+			gd.user  = res.user;
+			gd.token = res.token;
+
+			left.router.load( {
+				'template'     : myApp.templates.sideBarTpl,
+				'animatePages' : false,
+				'reload'       : true,
+				'context'      : {
+					'categories' : gd.categories,
+					'name'       : gd.user.name,
+					'token'      : gd.token
+				}
+			} );
+
+			myApp.closeModal( '.login-screen', true);
+		},
+
+		'error' : function searchError( xhr, err ) {
+			myApp.alert( 'Invalid email or password. Please try again.' );
+		},
+
+		'complete' : function () {
+			$$( 'input[name=email]' ).val( '' );
+			$$( 'input[name=password]' ).val( '' );
+			$$( '#gd-sign-in-loader' ).addClass( 'hidden' );
+			$$( '#gd-sign-in-options' ).removeClass( 'hidden' );
+		}
+	} );
+}
+
+function loadLogIn ( data ) {
+	myApp.closePanel( true );
+	myApp.loginScreen( '.login-screen', true);
+}
+
 function updateCart() {
 	if ( gd.onCart.total ) {
 		$$( '.cart-total' ).removeClass( 'hidden' );
@@ -291,6 +489,8 @@ function updateCart() {
 
 
 function initView () {
+	initGD();
+	showLoadingPage();
 	getCategories( loadSidebar );
 }
 
@@ -298,7 +498,6 @@ initView();
 
 
 function addToCart ( id ) {
-	console.log( id )
 	gd.products[ id ].count = 1;
 	gd.onCart.total += 1;
 	gd.onCart.products[ gd.products[ id ]._id ] = gd.products[ id ];
@@ -357,4 +556,8 @@ $$(document).on('submit', '.searchbar', function (e) {
 	var formData = myApp.formToJSON('.searchbar');
 	loadProducts( formData.q, 'name' );
 });
+
+$$( '.popup-loader' ).on( 'popup:closed', function () {
+	$$( '#popup-loader-page' ).html( '<span id="popup-loader-text" class="preloader preloader-red"></span>' );
+} );
 
