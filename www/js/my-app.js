@@ -268,7 +268,7 @@ function loadCart () {
 function loadCheckout () {
 	myApp.closePanel( true );
 
-	if ( myApp.getCurrentView().activePage.name !== 'checkout' ) {
+	if ( myApp.getCurrentView().activePage.name !== 'checkout' && gd.onCart.total ) {
 		mainView.router.load( {
 			'template' : myApp.templates.checkout,
 			'context'  : {

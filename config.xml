@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.phonegap.startrack" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Star Track</name>
+    <name>Grocery District</name>
     <description>
-        A basic Framework7 Media App for PhoneGap.
+        We deliver.
     </description>
-    <author email="tommy@devgeeks.org" href="http://phonegap.com">
+    <author email="dedito.cantila@gmail.com" href="http://grocerydistrict.ph">
         Adobe PhoneGap Team
     </author>
     <content src="index.html" />
@@ -21,18 +21,8 @@
     <platform name="android">
         <preference name="android-minSdkVersion" value="14" />
         <allow-intent href="market:*" />
-        <icon density="ldpi" src="res/icon/android/ldpi/icon.png" />
-        <icon density="mdpi" src="res/icon/android/mdpi/icon.png" />
-        <icon density="hdpi" src="res/icon/android/hdpi/icon.png" />
-        <icon density="xhdpi" src="res/icon/android/xhdpi/icon.png" />
-        <splash density="land-hdpi" src="res/screen/android/drawable-land-hdpi/screen.png" />
-        <splash density="land-ldpi" src="res/screen/android/drawable-land-ldpi/screen.png" />
-        <splash density="land-mdpi" src="res/screen/android/drawable-land-mdpi/screen.png" />
-        <splash density="land-xhdpi" src="res/screen/android/drawable-land-xhdpi/screen.png" />
-        <splash density="port-hdpi" src="res/screen/android/drawable-port-hdpi/screen.png" />
-        <splash density="port-ldpi" src="res/screen/android/drawable-port-ldpi/screen.png" />
-        <splash density="port-mdpi" src="res/screen/android/drawable-port-mdpi/screen.png" />
-        <splash density="port-xhdpi" src="res/screen/android/drawable-port-xhdpi/screen.png" />
+        <icon src="res/icon/android/logo.jpg" />
+        <splash src="res/icon/android/logo.jpg" />
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />

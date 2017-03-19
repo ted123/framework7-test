@@ -280,3 +280,7 @@ i.tabbar-demo-icon-4 {
 	padding : 10px;
 	margin : 0;
 }
+
+.has-decoration {
+	text-decoration : underline;
+}

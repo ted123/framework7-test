@@ -26,6 +26,11 @@
 					<!-- Index Page-->
 					<div data-page="right" class="page bg-white">
 						<div class="page-content">
+							<div class="toolbar gd-toolbar-fixed gd-bg-red color-white">
+								<div class="toolbar-inner" onClick="loadCheckout()">
+									<div class="pull-left">checkout</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -130,14 +135,15 @@
 				</div>
 			  <ul id="gd-sign-in-options">
 				<li>
-					<a href="#" class="item-link gd-sign-in list-button" onclick="signIn()">Sign In</a>
+					<a href="#" class="item-link color-black gd-sign-in list-button" onclick="signIn()">Sign In</a>
 				</li>
 				<li>
-					<a href="#" class="item-link list-button close-login-screen">Cancel</a>
+					<a href="#" class="item-link color-black list-button close-login-screen">Cancel</a>
 				</li>
 			  </ul>
 			  <div class="list-block-label">
-				<p>Forgot password? Please visit <a href="#" onclick="window.open('http://grocerydistrict.ph', '_system');">grocerydistict.ph</a> to reset your password.</p>
+				<p class="color-white">Forgot password or need to register? Please visit <a class="color-white has-decoration" href="#" onclick="window.open('http://grocerydistrict.ph', '_system');">grocerydistict.ph</a>
+				</p>
 			  </div>
 			</div>
 		</div>
@@ -605,7 +611,7 @@
 							</ul>
 						</div>
 						<div class="toolbar gd-toolbar-fixed gd-bg-red color-white">
-							<div class="toolbar-inner" onClick="loadCheckout()">
+							<div class="toolbar-inner" onclick="loadCheckout()">
 								<div class="pull-left">checkout</div>
 								<div class="cart-total-price pull-right">₱{{totalPrice}}</div>
 							</div>
