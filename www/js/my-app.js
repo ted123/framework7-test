@@ -226,7 +226,7 @@ function loadGDHomepage () {
 			} );
 		} )
 		.catch( function ( err ) {
-			myApp.alert( err );
+			myApp.alert( err, 'Grocery District' );
 		} );
 }
 
@@ -316,7 +316,7 @@ function loadTransactions () {
 		},
 
 		error : function searchError( xhr, err ) {
-			myApp.alert( 'An error occured. Try re-clicking transactions in the left navigation.' )
+			myApp.alert( 'An error occured. Try re-clicking transactions in the left navigation.', 'Grocery District' );
 		}
 	} );
 }
@@ -352,7 +352,7 @@ function loadProducts ( value, key ) {
 			} );
 		} )
 		.catch( function ( err ) {
-			myApp.alert( err );
+			myApp.alert( err, 'Grocery District' );
 		} );
 }
 
@@ -452,7 +452,7 @@ function signIn () {
 		},
 
 		'error' : function searchError( xhr, err ) {
-			myApp.alert( 'Invalid email or password. Please try again.' );
+			myApp.alert( 'Invalid email or password. Please try again.', 'Grocery District' );
 		},
 
 		'complete' : function () {
@@ -487,6 +487,120 @@ function updateCart() {
 	$$( '.checkout-total' ).text( '₱' + ( Number( gd.onCart.totalPrice ) + 50 ) );
 }
 
+function resetProductData () {
+	gd.products = {};
+	gd.onCart   = {
+		'products' : {},
+		'total'    : 0 
+	};
+
+	updateCart();
+	loadCart();
+}
+
+function submitCheckout () {
+	var quantity  = [];
+	var itemprice = [];
+	var ids       = [];
+
+	objToArray( gd.onCart.products ).map( function ( item, i ) {
+		quantity[ i ]  = item.count;
+		itemprice[ i ] = item.price;
+		ids[ i ]       = item._id;
+
+		return item;
+	} );
+
+	var data = {
+		'items'        : ids,
+		'quantity'     : quantity,
+		'itemprice'    : itemprice,
+		'notes'        : gd.checkoutData.get( 'notes' ),
+		'expectedTime' : gd.checkoutData.get( 'expectedTime' ),
+		'userid'       : gd.user.id
+	};
+
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://52.34.60.86:3000/checkout/GD:checkout',
+		'data'     : data,
+		'method'   : 'POST',
+		'success' : function ( res ) {
+			resetProductData();
+			loadTransactions();
+			myApp.closeModal( '#checkout-overlay', false );
+		},
+
+		'error' : function ( xhr, err ) {
+			myApp.alert( 'An error occured. Please try submitting the order again or check your network connection.', 'Grocery District' );
+			myApp.closeModal( '#checkout-overlay', false );
+		}
+	} );
+}
+
+function closeCheckoutOverlay () {
+	myApp.closeModal( '#checkout-overlay', false );
+}
+
+function checkVerificationCode ( code ) {
+	var data = jsonToFormData( { 
+		'token' : gd.token,
+		'code'  : ( code || '' ).trim()
+	} );
+
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://grocerydistrict.ph/api/validate/code',
+		'data'     : data,
+		'method'   : 'POST',
+		'success' : function ( res ) {
+			if ( res.status == 200 ) {
+				submitCheckout();
+			} else {
+				myApp.prompt( 'Invalid code.<br/> Please try typing it again below.', 'Verification Code', checkVerificationCode, closeCheckoutOverlay );
+			}
+		},
+
+		'error' : function ( xhr, err ) {
+			myApp.alert( 'An error occured. Please try submitting the order again or check your network connection.', 'Grocery District' );
+			myApp.closeModal( '#checkout-overlay', false );
+		}
+	} );
+}
+
+function sendVerificationCode () {
+	var data = jsonToFormData( { 'token' : gd.token } );
+
+	gd.checkoutData = jsonToFormData( myApp.formToJSON( '#checkout-info' ) );
+
+	if ( !gd.checkoutData.get( 'notes' ) || !gd.checkoutData.get( 'expectedTime' ) ) {
+		myApp.alert( 'Please fill in the notes and preferred time in "Other Information" section.', 'Grocery District' );
+		return;
+	}
+
+	myApp.popup( '#checkout-overlay', false, false );
+
+	$$.ajax( {
+		'dataType' : 'json',
+		'url'      : 'http://grocerydistrict.ph/api/send/confirmation',
+		'data'     : data,
+		'method'   : 'POST',
+		'success' : function ( res ) {
+			if ( res.status === 400  ) {
+				myApp.alert( res.msg, 'Grocery District' );
+				myApp.closeModal( '#checkout-overlay', false );
+			} else {
+				myApp.prompt( 'A new verification code has been sent to your email and phone number. Please place it below.', 'Verification Code', checkVerificationCode, closeCheckoutOverlay );
+			}
+		},
+
+		'error' : function ( xhr, err ) {
+			myApp.alert( 'An error occured. Please try submitting the order again or check your network connection.', 'Grocery District' );
+			myApp.closeModal( '#checkout-overlay', false );
+		}
+	} );
+}
+
 
 function initView () {
 	initGD();
@@ -517,7 +631,7 @@ function increaseQuantity ( id ) {
 
 	if ( product.count > 100 ) {
 		gd.onCart.products[ id ].count -= 1;
-		myApp.alert( 'Unfortunately you can only order the same product up to 100' );
+		myApp.alert( 'Unfortunately you can only order the same product up to 100', 'Grocery District' );
 	} else {
 		var totalPrice = product.count * product.price;
 		gd.onCart.total += 1;
@@ -561,3 +675,15 @@ $$( '.popup-loader' ).on( 'popup:closed', function () {
 	$$( '#popup-loader-page' ).html( '<span id="popup-loader-text" class="preloader preloader-red"></span>' );
 } );
 
+$$( document ).on( 'deviceready', function () {
+	function exitApp () {
+		navigator.app.exitApp();
+	}
+
+	function noop () {}
+
+	document.addEventListener("backbutton", function () {
+		myApp.confirm( 'Exiting the app will reset the items in cart. Are you sure you want to exit the app?', 'Grocery District', exitApp, noop );
+		return false;
+	}, false);
+} );

@@ -88,6 +88,11 @@
 				</div>
  -->			</div>
 		</div>
+		<div id="checkout-overlay" class="popup">
+			<div class="gd-page-loader bg-black">
+				<span class="preloader preloader-white"></span>
+			</div>
+		</div>
 		<div class="popup popup-loader">
 			<div id="popup-loader-page" class="gd-page-loader">
 				<span id="popup-loader-text" class="preloader preloader-red"></span>
@@ -162,7 +167,6 @@
 				</div>
 			</div>
 		</script>
-
 		<script type="text/template7" id="orderList">
 			<div class="page-content width-100">
 				<div class="gd-bg-red color-white content-block-title">
@@ -360,12 +364,13 @@
 							OTHER INFORMATION
 						</div>
 						<div class="list-block inset">
+							<form id="checkout-info">
 							<ul>
 								<li>
 									<div class="item-content">
 										<div class="item-inner">
 											<div class="item-input">
-												<textarea placeholder="Please place here the address where to deliver the products. The more details the better."></textarea>
+												<textarea name="notes" placeholder="Please place here the address where to deliver the products. The more details the better."></textarea>
 											</div>
 										</div>
 									</div>
@@ -374,7 +379,7 @@
 									<div class="item-content">
 										<div class="item-inner">
 											<div class="item-input">
-												<select>
+												<select name="expectedTime">
 													<option value="" disabled selected hidden>Preferred time of delivery</option>
 													<option value="10:00am">10:00am</option>
 													<option value="10:30am">10:30am</option>
@@ -420,6 +425,10 @@
 									</div>
 								</li>
 							</ul>
+							</form>
+						</div>
+						<div class="content-block">
+							<a href="#" class="button button-big button-fill" onclick="sendVerificationCode()">SUBMIT ORDER</a>
 						</div>
 					</div>
 				</div>
@@ -620,6 +629,7 @@
 				</div>
 			</div>
 		</script>
+		<script src="cordova.js"></script>
 		<!-- Path to Framework7 Library JS-->
 		<script type="text/javascript" src="lib/framework7/js/framework7.min.js"></script>
 		<script type="text/javascript" src="lib/bluebird/bluebird.js"></script>

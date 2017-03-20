@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.phonegap.startrack" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.phonegap.grocerydistrict" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Grocery District</name>
     <description>
         We deliver.
     </description>
     <author email="dedito.cantila@gmail.com" href="http://grocerydistrict.ph">
-        Adobe PhoneGap Team
+        Grocery District Team
     </author>
     <content src="index.html" />
     <access origin="*" />
